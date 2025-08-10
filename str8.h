@@ -78,6 +78,7 @@ typedef struct Str8File {
 ArenaBlock *ArenaBlock_Create(U64 cap);
 B32 Arena_Create(Arena *arena, U64 cap);
 void *Arena_Alloc(Arena *arena, U64 size);
+void Arena_Reset(Arena *arena);
 void Arena_Delete(Arena *arena);
 
 Str8 Str8_Copy(Arena *arena, Str8 s);
@@ -209,6 +210,22 @@ void *Arena_Alloc(Arena *arena, U64 size) {
 
     new_block->offset += new_padding + size;
     return (void *)new_aligned_ptr;
+}
+
+void Arena_Reset(Arena *arena) {
+    if (!arena || !arena->head) return;
+
+    ArenaBlock *block = arena->head;
+    while (block) {
+        uintptr_t start = (uintptr_t)block->buffer;
+        uintptr_t aligned_start = (start + 7) & ~(uintptr_t)7;
+        U64 padding = aligned_start - start;
+
+        block->offset = padding;
+        block = block->next;
+    }
+
+    arena->current = arena->head;
 }
 
 void Arena_Delete(Arena *arena) {
