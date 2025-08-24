@@ -90,6 +90,7 @@ Str8 Str8_Center(Arena *arena, Str8 s, U32 len, U8 c);
 Str8 Str8_FromCStr(char *s);
 U8 *Str8_ToCStr(Arena *arena, Str8 s);
 Str8 Str8_Chomp(Str8 s);
+U64 Str8_Count(Str8 s, U8 c);
 
 // WARNING: These functions does not check overflowing
 S32 Str8_ToS32(Str8 s);
@@ -98,6 +99,8 @@ S64 Str8_ToS64(Str8 s);
 U64 Str8_ToU64(Str8 s);
 F32 Str8_ToF32(Str8 s);
 F64 Str8_ToF64(Str8 s);
+
+Str8 U32_ToStr8(Arena *arena, U32 n);
 
 Str8Array Str8_SplitWhitespace(Arena *arena, Str8 s);
 Str8Array Str8_SplitChar(Arena *arena, Str8 s, U8 c);
@@ -353,6 +356,16 @@ Str8 Str8_Chomp(Str8 s) {
     return s;
 }
 
+U64 Str8_Count(Str8 s, U8 c) {
+    U64 count = 0;
+
+    for (U64 i = 0; i < s.len; ++i)
+        if (s.buffer[i] == c)
+            ++count;
+
+    return count;
+}
+
 S32 Str8_ToS32(Str8 s) {
     S32 n=0, sign=1;
 
@@ -537,6 +550,38 @@ F64 Str8_ToF64(Str8 s) {
     result *= pow(10.0, exponent);
 
     return sign * result;
+}
+
+Str8 U32_ToStr8(Arena *arena, U32 n) {
+    U32 num_digits = 0;
+    U32 temp = n;
+
+    if (temp == 0)
+        num_digits = 1;
+    else {
+        while (temp > 0) {
+            temp /= 10;
+            ++num_digits;
+        }
+    }
+
+    Str8 s;
+    s.len = num_digits;
+    s.buffer = (U8 *)Arena_Alloc(arena, num_digits);
+
+    --num_digits;
+
+    if (n == 0) {
+        s.buffer[0] = '0';
+        return s;
+    }
+
+    while (n > 0) {
+        s.buffer[num_digits--] = '0' + n % 10;
+        n /= 10;
+    }
+
+    return s;
 }
 
 Str8Array Str8_SplitWhitespace(Arena *arena, Str8 s) {
