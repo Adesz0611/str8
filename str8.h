@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include <ctype.h>
 #include <math.h>
 
@@ -81,6 +82,7 @@ void *Arena_Alloc(Arena *arena, U64 size);
 void Arena_Reset(Arena *arena);
 void Arena_Delete(Arena *arena);
 
+U64 Str8_Hash(Str8 s);
 Str8 Str8_Copy(Arena *arena, Str8 s);
 Str8 Str8_Append(Arena *arena, Str8 lhs, Str8 rhs);
 B32 Str8_Equals(Str8 lhs, Str8 rhs);
@@ -243,6 +245,15 @@ void Arena_Delete(Arena *arena) {
     arena->current = NULL;
 }
 
+U64 Str8_Hash(Str8 s) {
+    U64 hash = 5381;
+
+    for (U64 i = 0; i < s.len; ++i)
+        hash = ((hash << 5) + hash) + s.buffer[i];
+
+    return hash;
+}
+
 Str8 Str8_Copy(Arena *arena, Str8 s) {
     Str8 res;
 
@@ -376,8 +387,15 @@ S32 Str8_ToS32(Str8 s) {
 
     if (s.len > 0)
         switch(s.buffer[0]) {
-            case '-':   sign=-1;
-            case '+':   --s.len; ++s.buffer; break;
+            case '-':
+                sign = -1;
+                --s.len;
+                ++s.buffer;
+                break;
+            case '+':
+                --s.len;
+                ++s.buffer;
+                break;
         }
 
     while (s.len-- && isdigit(*s.buffer))
@@ -410,8 +428,15 @@ S64 Str8_ToS64(Str8 s) {
 
     if (s.len > 0)
         switch(s.buffer[0]) {
-            case '-':   sign=-1;
-            case '+':   --s.len; ++s.buffer; break;
+            case '-':
+                sign=-1;
+                --s.len;
+                ++s.buffer;
+                break;
+            case '+':
+                --s.len;
+                ++s.buffer;
+                break;
         }
 
     while (s.len-- && isdigit(*s.buffer))
@@ -488,9 +513,17 @@ F32 Str8_ToF32(Str8 s) {
         exponent = exp_sign * exp_value;
     }
 
-    result *= powf(10.0f, exponent);
+    if (exponent > 0) {
+        while (exponent--) {
+            result *= 10.0f;
+        }
+    } else if (exponent < 0) {
+        while (exponent++) {
+            result /= 10.0f;
+        }
+    }
 
-    return (F32)(sign * result);
+    return sign * result;
 }
 
 F64 Str8_ToF64(Str8 s) {
@@ -547,7 +580,15 @@ F64 Str8_ToF64(Str8 s) {
         exponent = exp_sign * exp_value;
     }
 
-    result *= pow(10.0, exponent);
+    if (exponent > 0) {
+        while (exponent--) {
+            result *= 10.0;
+        }
+    } else if (exponent < 0) {
+        while (exponent++) {
+            result /= 10.0;
+        }
+    }
 
     return sign * result;
 }
