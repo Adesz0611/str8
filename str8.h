@@ -132,13 +132,13 @@ static force_inline Str8 Str8_Substr(Str8 s, U64 offset, U64 length) {
 
 // Cheat for operator overloading in C
 #define _ARG3(_1,_2,_3,N,...) N
-#define COUNT_ARGS(...) _ARG3(__VA_ARGS__, 3, 2)
+#define STR8_COUNT_ARGS(...) _ARG3(__VA_ARGS__, 3, 2)
 
 #define CAT(a, b) CAT_IMPL(a, b)
 #define CAT_IMPL(a, b) a##b
 
 // Operator overloading for Str8_Split
-#define Str8_Split(...) _GenericSplit(COUNT_ARGS(__VA_ARGS__), __VA_ARGS__)
+#define Str8_Split(...) _GenericSplit(STR8_COUNT_ARGS(__VA_ARGS__), __VA_ARGS__)
 #define _GenericSplit(N, ...) CAT(_GenericSplit_, N)(__VA_ARGS__)
 #define _GenericSplit_2(arena, s) Str8_SplitWhitespace((arena), (s))
 #define _GenericSplit_3(arena, s, delim) Str8_SplitChar((arena), (s), (delim))
